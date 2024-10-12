@@ -1,5 +1,5 @@
 import pyamf
-import os, shutil,json
+import os, shutil, json
 from pyamf.amf3 import ByteArray,DataInput
 from pyamf.util import BufferedByteStream
 from pyamf import ASObject,DecodeError,UndefinedType
@@ -84,11 +84,33 @@ def parse_config(config_bin:bytes)->dict:
         print("解析:",as_object["prefixName"])
     return fz_dict
     
+def parseConfigFile(input_file:str)->dict:
+    input_file = input_file.replace("\\","/").replace("./","").replace("/","")
+    output_dir = "splitConfig" + input_file[input_file.find("_"):input_file.find(".")]
+
+    if not os.path.exists(input_file):
+        print("请检查文件路径")
+        exit()
+
+    with open(input_file, "rb") as file:
+        amf_data = file.read()
+        file.close()
+    parsed_data = parse_config(amf_data)
+    
+    shutil.rmtree(output_dir,True)
+    os.makedirs(output_dir,777,True)
+
+    for key in parsed_data.keys():
+        print("写出:", key + "json")
+        with open(os.path.join(output_dir, key + '.json'), "+w", encoding='utf-8') as f:
+            f.write(json.dumps(parsed_data.get(key,{}), ensure_ascii=False, indent=4))
+    
+    print("配置解析完成")
+    exit()
 
 if __name__ == "__main__":
-
-    input_file = "./cg1_20240701_2[1].swf"
-    output_dir = 'splitConfig' + input_file[input_file.find('_'):input_file.find('.')]
+    input_file = "cg1_20240715_1.swf"
+    output_dir = "splitConfig" + input_file[input_file.find("_"):input_file.find(".")]
 
     if not os.path.exists(input_file):
         print("请检查文件路径")
