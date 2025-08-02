@@ -1,5 +1,5 @@
 import pyamf
-import os, shutil, json
+import os, shutil,json
 from pyamf.amf3 import ByteArray,DataInput
 from pyamf.util import BufferedByteStream
 from pyamf import ASObject,DecodeError,UndefinedType
@@ -99,13 +99,24 @@ def parseConfigFile(input_file:str)->dict:
     
     shutil.rmtree(output_dir,True)
     os.makedirs(output_dir,777,True)
+    failed_list = []
 
-    for key in parsed_data.keys():
-        print("写出:", key + "json")
-        with open(os.path.join(output_dir, key + '.json'), "+w", encoding='utf-8') as f:
-            f.write(json.dumps(parsed_data.get(key,{}), ensure_ascii=False, indent=4))
+    for key,data in parsed_data.items():
+        try:
+            with open(os.path.join(output_dir, key + '.json'), "+w", encoding='utf-8') as f:
+                f.write(json.dumps(data, ensure_ascii=False, indent=4))
+            print("写出:", key)
+        except Exception as e:
+            print(e)
+            print("写出失败:", key)
+            failed_list.append(key)
     
     print("配置解析完成")
+    print("解析失败列表:", failed_list)
+    if "Drop" in parsed_data.keys() or "DropSvr" in parsed_data.keys():
+        print("Drop配置依然存在, 配置可用")
+    else:
+        print("Drop配置不存在, 无法生成本地掉落物")
     exit()
 
 if __name__ == "__main__":
